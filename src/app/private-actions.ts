@@ -1,7 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
-
 import { summitRegistrationSchema, type RegistrationValues } from "@/lib/summit/validation";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
@@ -109,10 +107,13 @@ export async function submitPrivateRegistration(
         values,
       };
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error connecting to Supabase or saving registration:", err);
+    const message =
+      err instanceof Error ? err.message : "Check Supabase environment variables";
+
     return {
-      message: `Database connection error (${err?.message || "Check Supabase environment variables"}).`,
+      message: `Database connection error (${message}).`,
       values,
     };
   }

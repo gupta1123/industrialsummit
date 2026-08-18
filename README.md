@@ -30,16 +30,16 @@ The table has RLS enabled and is not available to `anon` or `authenticated` brow
 Recommended Netlify project name:
 
 ```text
-Industrial Summit Private Registration
+Industrial Summit
 ```
 
 Recommended site slug:
 
 ```text
-industrial-summit-private-registration
+industrial-summit
 ```
 
-Import this GitHub repository into Netlify and configure the variables in `.env.example`. Use the same Supabase URL, publishable key, secret key, and admin credentials as the existing registration site. Razorpay and Resend variables are not required for this private flow.
+Import this GitHub repository into Netlify and configure the variables in `.env.example`. Set `NEXT_PUBLIC_SITE_URL` to `https://industrial-summit.netlify.app`. Use the same Supabase URL, publishable key, secret key, and admin credentials as the existing registration site. Razorpay and Resend variables are not required for this private flow.
 
 ## Routes
 
