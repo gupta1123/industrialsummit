@@ -74,24 +74,32 @@ export async function submitPrivateRegistration(
     summit_expectations: parsed.data.summit_expectations,
   };
 
-  const supabase = createSupabaseServiceClient();
-  const { error } = await supabase.from("summit_private_registrations").insert({
-    first_name: values.first_name,
-    last_name: values.last_name,
-    phone: values.phone,
-    email: values.email.toLowerCase(),
-    industry: values.industry === "Other" ? values.industry_other : values.industry,
-    profession: values.profession,
-    designation: values.designation,
-    place: values.place,
-    participation_purpose: values.participation_purpose,
-    summit_expectations: values.summit_expectations || null,
-  });
+  try {
+    const supabase = createSupabaseServiceClient();
+    const { error } = await supabase.from("summit_private_registrations").insert({
+      first_name: values.first_name,
+      last_name: values.last_name,
+      phone: values.phone,
+      email: values.email.toLowerCase(),
+      industry: values.industry === "Other" ? values.industry_other : values.industry,
+      profession: values.profession,
+      designation: values.designation,
+      place: values.place,
+      participation_purpose: values.participation_purpose,
+      summit_expectations: values.summit_expectations || null,
+    });
 
-  if (error) {
-    console.error("Unable to save private summit registration:", error.message);
+    if (error) {
+      console.error("Unable to save private summit registration:", error);
+      return {
+        message: `Unable to save registration (${error.message}). Please check database configuration.`,
+        values,
+      };
+    }
+  } catch (err: any) {
+    console.error("Error connecting to Supabase or saving registration:", err);
     return {
-      message: "We could not save your registration. Please try again.",
+      message: `Database connection error (${err?.message || "Check Supabase environment variables"}).`,
       values,
     };
   }
