@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { PiCheckCircle, PiCaretDown } from "react-icons/pi";
 
 import {
@@ -26,6 +27,7 @@ const emptyValues: RegistrationValues = {
 };
 
 export function PrivateRegistrationForm() {
+  const router = useRouter();
   const initialState: PrivateRegistrationState = { values: emptyValues };
   const [state, formAction, pending] = useActionState(
     submitPrivateRegistration,
@@ -33,6 +35,12 @@ export function PrivateRegistrationForm() {
   );
   const values = { ...emptyValues, ...state.values };
   const [selectedSector, setSelectedSector] = useState(values.industry);
+
+  useEffect(() => {
+    if (state.success) {
+      router.push("/submitted");
+    }
+  }, [state.success, router]);
 
   return (
     <form action={formAction} noValidate>

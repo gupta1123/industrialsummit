@@ -6,6 +6,7 @@ import { summitRegistrationSchema, type RegistrationValues } from "@/lib/summit/
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 export type PrivateRegistrationState = {
+  success?: boolean;
   message?: string;
   errors?: Partial<Record<keyof RegistrationValues, string[]>>;
   values?: Partial<RegistrationValues>;
@@ -116,5 +117,5 @@ export async function submitPrivateRegistration(
     };
   }
 
-  redirect("/submitted");
+  return { success: true };
 }
