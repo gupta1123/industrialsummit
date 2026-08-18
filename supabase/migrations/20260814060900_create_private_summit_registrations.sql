@@ -36,11 +36,8 @@ create index if not exists summit_private_registrations_phone_idx
 
 alter table public.summit_private_registrations enable row level security;
 
-revoke all on table public.summit_private_registrations from anon, authenticated;
-revoke all on sequence public.summit_private_registrations_id_seq from anon, authenticated;
-
-grant select, insert on table public.summit_private_registrations to service_role;
-grant usage, select on sequence public.summit_private_registrations_id_seq to service_role;
+grant select, insert on table public.summit_private_registrations to anon, authenticated, service_role;
+grant usage, select on sequence public.summit_private_registrations_id_seq to anon, authenticated, service_role;
 
 drop trigger if exists set_summit_private_registrations_updated_at on public.summit_private_registrations;
 create trigger set_summit_private_registrations_updated_at

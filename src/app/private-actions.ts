@@ -74,20 +74,32 @@ export async function submitPrivateRegistration(
     summit_expectations: parsed.data.summit_expectations,
   };
 
+  const insertPayload = {
+    first_name: values.first_name,
+    last_name: values.last_name,
+    phone: values.phone,
+    email: values.email.toLowerCase(),
+    industry: values.industry === "Other" ? values.industry_other : values.industry,
+    profession: values.profession,
+    designation: values.designation,
+    place: values.place,
+    participation_purpose: values.participation_purpose,
+    summit_expectations: values.summit_expectations || null,
+  };
+
   try {
     const supabase = createSupabaseServiceClient();
-    const { error } = await supabase.from("summit_private_registrations").insert({
-      first_name: values.first_name,
-      last_name: values.last_name,
-      phone: values.phone,
-      email: values.email.toLowerCase(),
-      industry: values.industry === "Other" ? values.industry_other : values.industry,
-      profession: values.profession,
-      designation: values.designation,
-      place: values.place,
-      participation_purpose: values.participation_purpose,
-      summit_expectations: values.summit_expectations || null,
-    });
+    let { error } = await supabase.from("summit_private_registrations").insert(insertPayload);
+
+    if (error && error.message.includes("Invalid API key") && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
+      const { createClient: createSupabaseClient } = await import("@supabase/supabase-js");
+      const fallbackClient = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!.trim().replace(/^["']|["']$/g, ""),
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!.trim().replace(/^["']|["']$/g, "")
+      );
+      const fallbackResult = await fallbackClient.from("summit_private_registrations").insert(insertPayload);
+      error = fallbackResult.error;
+    }
 
     if (error) {
       console.error("Unable to save private summit registration:", error);
