@@ -39,6 +39,20 @@ alter table public.summit_private_registrations enable row level security;
 grant select, insert on table public.summit_private_registrations to anon, authenticated, service_role;
 grant usage, select on sequence public.summit_private_registrations_id_seq to anon, authenticated, service_role;
 
+drop policy if exists "Allow insert for private summit registrations" on public.summit_private_registrations;
+create policy "Allow insert for private summit registrations"
+  on public.summit_private_registrations
+  for insert
+  to anon, authenticated, service_role
+  with check (true);
+
+drop policy if exists "Allow select for private summit registrations" on public.summit_private_registrations;
+create policy "Allow select for private summit registrations"
+  on public.summit_private_registrations
+  for select
+  to anon, authenticated, service_role
+  using (true);
+
 drop trigger if exists set_summit_private_registrations_updated_at on public.summit_private_registrations;
 create trigger set_summit_private_registrations_updated_at
 before update on public.summit_private_registrations
