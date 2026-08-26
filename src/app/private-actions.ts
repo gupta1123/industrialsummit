@@ -1,9 +1,12 @@
 "use server";
 
-import { summitRegistrationSchema, type RegistrationValues } from "@/lib/summit/validation";
+import {
+  summitRegistrationSchema,
+  type RegistrationValues,
+} from "@/lib/summit/validation";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
-export type PrivateRegistrationState = {
+export type WaitlistRegistrationState = {
   success?: boolean;
   message?: string;
   errors?: Partial<Record<keyof RegistrationValues, string[]>>;
@@ -15,10 +18,10 @@ function formValue(formData: FormData, name: string) {
   return typeof input === "string" ? input : "";
 }
 
-export async function submitPrivateRegistration(
-  _previousState: PrivateRegistrationState,
+export async function submitWaitlistRegistration(
+  _previousState: WaitlistRegistrationState,
   formData: FormData,
-): Promise<PrivateRegistrationState> {
+): Promise<WaitlistRegistrationState> {
   const submittedValues = {
     first_name: formValue(formData, "first_name"),
     last_name: formValue(formData, "last_name"),
@@ -73,47 +76,39 @@ export async function submitPrivateRegistration(
     summit_expectations: parsed.data.summit_expectations,
   };
 
-  const insertPayload = {
-    first_name: values.first_name,
-    last_name: values.last_name,
-    phone: values.phone,
-    email: values.email.toLowerCase(),
-    industry: values.industry === "Other" ? values.industry_other : values.industry,
-    profession: values.profession,
-    designation: values.designation,
-    place: values.place,
-    participation_purpose: values.participation_purpose,
-    summit_expectations: values.summit_expectations || null,
-  };
-
   try {
     const supabase = createSupabaseServiceClient();
-    let { error } = await supabase.from("summit_private_registrations").insert(insertPayload);
-
-    if (error && error.message.includes("Invalid API key") && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
-      const { createClient: createSupabaseClient } = await import("@supabase/supabase-js");
-      const fallbackClient = createSupabaseClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!.trim().replace(/^["']|["']$/g, ""),
-        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!.trim().replace(/^["']|["']$/g, "")
-      );
-      const fallbackResult = await fallbackClient.from("summit_private_registrations").insert(insertPayload);
-      error = fallbackResult.error;
-    }
+    const { error } = await supabase
+      .from("summit_waitlist_registrations")
+      .insert({
+        registration_type: "individual",
+        company_name: null,
+        attendee_count: 1,
+        first_name: values.first_name,
+        last_name: values.last_name,
+        phone: values.phone,
+        email: values.email.toLowerCase(),
+        industry:
+          values.industry === "Other" ? values.industry_other : values.industry,
+        profession: values.profession,
+        designation: values.designation,
+        place: values.place,
+        participation_purpose: values.participation_purpose,
+        meeting_requests: [],
+        summit_expectations: values.summit_expectations || null,
+      });
 
     if (error) {
-      console.error("Unable to save private summit registration:", error);
+      console.error("Unable to save waitlist registration:", error);
       return {
-        message: `Unable to save registration (${error.message}). Please check database configuration.`,
+        message: "We could not save your details. Please try again.",
         values,
       };
     }
   } catch (err: unknown) {
-    console.error("Error connecting to Supabase or saving registration:", err);
-    const message =
-      err instanceof Error ? err.message : "Check Supabase environment variables";
-
+    console.error("Error connecting to Supabase or saving waitlist:", err);
     return {
-      message: `Database connection error (${message}).`,
+      message: "We could not save your details. Please try again.",
       values,
     };
   }
